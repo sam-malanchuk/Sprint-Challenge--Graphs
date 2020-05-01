@@ -10,8 +10,8 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"
-# map_file = "maps/test_cross.txt"
+# map_file = "maps/test_line.txt"
+map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
 # map_file = "maps/main_maze.txt"
@@ -26,26 +26,37 @@ world.print_rooms()
 player = Player(world.starting_room)
 
 # Fill this out with directions to walk
-# traversal_path = ['n', 'n']
 traversal_path = []
 
-def automove(curr_exits):
+def automove(curr_exits, paths):
     # if I can go north, go north
     if 'n' in curr_exits:
-        player.travel('n')
-        return 'n' 
+        if paths['n'] == '?':
+            player.travel('n')
+            return 'n' 
+        else:
+            raise IndexError("Error: no untravelled paths found from this room")
     # if can't go north, try east
     elif 'e' in curr_exits:
-        player.travel('e')
-        return 'e' 
+        if paths['e'] == '?':
+            player.travel('e')
+            return 'e' 
+        else:
+            raise IndexError("Error: no untravelled paths found from this room")
     # if can't go north or east, try south
     elif 's' in curr_exits:
-        player.travel('s')
-        return 's' 
+        if paths['s'] == '?':
+            player.travel('s')
+            return 's' 
+        else:
+            raise IndexError("Error: no untravelled paths found from this room")
     # if can't go north, east or south, try west
     elif 'w' in curr_exits:
-        player.travel('w')
-        return 'w' 
+        if paths['w'] == '?':
+            player.travel('w')
+            return 'w' 
+        else:
+            raise IndexError("Error: no untravelled paths found from this room")
     # if can't go north, east, south or west, raise error
     else:
         raise IndexError("Error: can't go in any direction")
@@ -100,17 +111,23 @@ def traversal_calc():
 
         print(f'Room # {curr_room}')
     
+        # only if moved has been set to a direction
         if moved != 'none':
             print(f'prev_room: {prev_room}, moved: {moved}')
             # set moved direction for previous room
             rooms_graph[prev_room][moved] = curr_room
             # get the opposite direction moved
+            print(f'Moved before getting opposite: {moved}')
             moved_opposite = opposite_dir(moved)
+            # add the moved direction to the full path
+            full_path.append(moved)
         # create a dictionary in our room dictionary for current room
         rooms_graph[curr_room] = {}
         # for every direction available from this room
         for direction in curr_exits:
+            # if the direction is the one we came from
             if direction == moved_opposite:
+                # set it to the previous room
                 rooms_graph[curr_room][direction] = prev_room
             else:
                 # add the key with a temp value of ? to the graph
@@ -118,15 +135,17 @@ def traversal_calc():
 
         # set the current room as the previous one
         prev_room = curr_room
-        # add the moved direction to the full path
-        full_path.append(moved)
         # go in the next best direction
-        moved = automove(curr_exits)
+        moved = automove(curr_exits, rooms_graph[curr_room])
+        print(f'Trying to go: {moved}')
 
+        # temp loop limiter
         i += 1
         if i > 10:
             break
+        # check if any path direction still has an unknown room
         if paths_check(rooms_graph) is False:
+            # if all paths are checked, end while loop
             break
 
     print(rooms_graph)
