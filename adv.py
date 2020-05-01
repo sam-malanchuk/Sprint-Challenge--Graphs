@@ -64,20 +64,33 @@ else:
 def automove(curr_exits):
     # if I can go north, go north
     if 'n' in curr_exits:
-        return player.travel('n')
+        player.travel('n')
+        return 'n' 
     # if can't go north, try east
     elif 'e' in curr_exits:
-        return player.travel('e')
+        player.travel('e')
+        return 'e' 
     # if can't go north or east, try south
     elif 's' in curr_exits:
-        return player.travel('s')
+        player.travel('s')
+        return 's' 
     # if can't go north, east or south, try west
     elif 'w' in curr_exits:
-        return player.travel('w')
+        player.travel('w')
+        return 'w' 
     # if can't go north, east, south or west, raise error
     else:
         raise IndexError("Error: can't go in any direction")
         
+def paths_check(graph):
+    # for every room in graph
+    for room in graph:
+        # every direction in every room
+        for direction in graph[room]:
+            # check to see if there are any paths unchecked
+            if graph[room][direction] == '?':
+                return True
+    return False
 
 def traversal_calc():
     # create a graph to track all the rooms and their directions
@@ -89,20 +102,33 @@ def traversal_calc():
 
     print(f'Room # {player.current_room.id}')
 
-    # get all the available exits for current room
-    curr_exits = player.current_room.get_exits()
+    # temp loop limit
+    i = 0
+    while True:
+        # get all the available exits for current room
+        curr_exits = player.current_room.get_exits()
 
-    # go in the next best direction
-    automove(curr_exits)
+        # create a dictionary in our room dictionary for current room
+        rooms_graph[player.current_room.id] = {}
+        # for every direction available from this room
+        for direction in curr_exits:
+            # add the key with a temp value of ? to the graph
+            rooms_graph[player.current_room.id][direction] = '?'
 
-    # create a dictionary in our room dictionary for current room
-    rooms_graph[player.current_room.id] = {}
-    # for every direction available from this room
-    for direction in curr_exits:
-        # add the key with a temp value of ? to the graph
-        rooms_graph[player.current_room.id][direction] = '?'
+        # set the current room as the previous one
+        prev_room = player.current_room.id
+        # go in the next best direction
+        moved = automove(curr_exits)
+        # add the moved direction to the full path
+        full_path.append(moved)
 
-    print(rooms_graph)
+        print(rooms_graph)
+        i += 1
+        if i > 10:
+            break
+        if paths_check(rooms_graph) is False:
+            break
+
 
 traversal_calc()
 
