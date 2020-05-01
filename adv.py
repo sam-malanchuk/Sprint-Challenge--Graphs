@@ -29,38 +29,6 @@ player = Player(world.starting_room)
 # traversal_path = ['n', 'n']
 traversal_path = []
 
-
-
-# TRAVERSAL TEST - DO NOT MODIFY
-visited_rooms = set()
-player.current_room = world.starting_room
-visited_rooms.add(player.current_room)
-
-for move in traversal_path:
-    player.travel(move)
-    visited_rooms.add(player.current_room)
-
-if len(visited_rooms) == len(room_graph):
-    print(f"TESTS PASSED: {len(traversal_path)} moves, {len(visited_rooms)} rooms visited")
-else:
-    print("TESTS FAILED: INCOMPLETE TRAVERSAL")
-    print(f"{len(room_graph) - len(visited_rooms)} unvisited rooms")
-
-
-
-#######
-# UNCOMMENT TO WALK AROUND
-#######
-# player.current_room.print_room_description(player)
-# while True:
-#     cmds = input("-> ").lower().split(" ")
-#     if cmds[0] in ["n", "s", "e", "w"]:
-#         player.travel(cmds[0], True)
-#     elif cmds[0] == "q":
-#         break
-#     else:
-#         print("I did not understand that command.")
-
 def automove(curr_exits):
     # if I can go north, go north
     if 'n' in curr_exits:
@@ -92,6 +60,23 @@ def paths_check(graph):
                 return True
     return False
 
+def opposite_dir(direction):
+    # if current is n, return s
+    if direction == "n":
+        return 's'
+    # if current is e, return w
+    elif direction == "e":
+        return 'w'
+    # if current is s, return n
+    elif direction == "s":
+        return 'n'
+    # if current is w, return e
+    elif direction == "w":
+        return 'e'
+    # else, raise error
+    else:
+        raise IndexError("Error: can't go in any direction")
+
 def traversal_calc():
     # create a graph to track all the rooms and their directions
     rooms_graph = {}
@@ -99,38 +84,53 @@ def traversal_calc():
     full_path = []
     # set a variable for the previous room
     prev_room = 0
-
-    print(f'Room # {player.current_room.id}')
+    # set a variable for the current room
+    curr_room = player.current_room.id
+    # set variable for later
+    moved = 'none'
+    moved_opposite = 'none'
 
     # temp loop limit
     i = 0
     while True:
+        # set current room
+        curr_room = player.current_room.id
         # get all the available exits for current room
         curr_exits = player.current_room.get_exits()
 
+        print(f'Room # {curr_room}')
+    
+        if moved != 'none':
+            print(f'prev_room: {prev_room}, moved: {moved}')
+            # set moved direction for previous room
+            rooms_graph[prev_room][moved] = curr_room
+            # get the opposite direction moved
+            moved_opposite = opposite_dir(moved)
         # create a dictionary in our room dictionary for current room
-        rooms_graph[player.current_room.id] = {}
+        rooms_graph[curr_room] = {}
         # for every direction available from this room
         for direction in curr_exits:
-            # add the key with a temp value of ? to the graph
-            rooms_graph[player.current_room.id][direction] = '?'
+            if direction == moved_opposite:
+                rooms_graph[curr_room][direction] = prev_room
+            else:
+                # add the key with a temp value of ? to the graph
+                rooms_graph[curr_room][direction] = '?'
 
         # set the current room as the previous one
-        prev_room = player.current_room.id
-        # go in the next best direction
-        moved = automove(curr_exits)
+        prev_room = curr_room
         # add the moved direction to the full path
         full_path.append(moved)
+        # go in the next best direction
+        moved = automove(curr_exits)
 
-        print(rooms_graph)
         i += 1
         if i > 10:
             break
         if paths_check(rooms_graph) is False:
             break
 
-
-traversal_calc()
+    print(rooms_graph)
+    return full_path
 
 """
 
@@ -147,3 +147,35 @@ the loop until all the rooms have been visited.
 
 
 """
+
+traversal_path = traversal_calc()
+
+# TRAVERSAL TEST - DO NOT MODIFY
+visited_rooms = set()
+player.current_room = world.starting_room
+visited_rooms.add(player.current_room)
+
+for move in traversal_path:
+    player.travel(move)
+    visited_rooms.add(player.current_room)
+
+if len(visited_rooms) == len(room_graph):
+    print(f"TESTS PASSED: {len(traversal_path)} moves, {len(visited_rooms)} rooms visited")
+else:
+    print("TESTS FAILED: INCOMPLETE TRAVERSAL")
+    print(f"{len(room_graph) - len(visited_rooms)} unvisited rooms")
+
+
+
+#######
+# UNCOMMENT TO WALK AROUND
+#######
+# player.current_room.print_room_description(player)
+# while True:
+#     cmds = input("-> ").lower().split(" ")
+#     if cmds[0] in ["n", "s", "e", "w"]:
+#         player.travel(cmds[0], True)
+#     elif cmds[0] == "q":
+#         break
+#     else:
+#         print("I did not understand that command.")
