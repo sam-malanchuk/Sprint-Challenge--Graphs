@@ -11,10 +11,10 @@ world = World()
 
 # You may uncomment the smaller graphs for development and testing purposes.
 # map_file = "maps/test_line.txt"
-map_file = "maps/test_cross.txt"
+# map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph=literal_eval(open(map_file, "r").read())
@@ -89,7 +89,6 @@ def room_path(graph, starting_room, ending_room):
 def automove(curr_exits, paths):
     # if I can go north, go north
     if 'n' in curr_exits and paths['n'] == '?':
-        # print('why are you going north?', paths)
         # if paths['n'] == '?':
         player.travel('n')
         return 'n' 
@@ -118,7 +117,6 @@ def automove(curr_exits, paths):
         #     raise IndexError("Error: no untravelled paths found from this room")
     # if can't go north, east, south or west, raise error
     else:
-        print(curr_exits, paths)
         raise IndexError("Error: can't go in any direction")
         
 def paths_check(graph):
@@ -171,16 +169,11 @@ def traversal_calc():
         # get all the available exits for current room
         curr_exits = player.current_room.get_exits()
 
-        print(f'Room # {curr_room}')
-
-
         # only if moved has been set to a direction
         if moved != 'none':
-            print(f'prev_room: {prev_room}, moved: {moved}')
             # set moved direction for previous room
             rooms_graph[prev_room][moved] = curr_room
             # get the opposite direction moved
-            print(f'Moved before getting opposite: {moved}')
             moved_opposite = opposite_dir(moved)
             # add the moved direction to the full path
             full_path.append(moved)
@@ -193,8 +186,6 @@ def traversal_calc():
                 if rooms_graph[prev_room][direction] == '?':
                     # add it to the stack of paths need to visit
                     paths_to_visit.push((prev_room, direction))
-
-        print(paths_to_visit.stack)
 
         # only if don't have a record of the room, record new
         if curr_room not in rooms_graph:
@@ -221,18 +212,10 @@ def traversal_calc():
             # grab the last next path needed from stack
             ending_room = paths_to_visit.pop()
 
-            # # go back to the most recent room with an unexplored path
-            # print(f'This is the path: {room_path(rooms_graph, curr_room, ending_room[0])}')
-
             # find the path back to the most recent room with an unexplored path
-            print('rooms_graph', rooms_graph)
-            print('curr_room', curr_room)
-            print(f'this is in paths_to_visit: {paths_to_visit.stack}')
-            print('ending_room[0]', ending_room[0])
             path_to_go = room_path(rooms_graph, curr_room, ending_room[0])
             # for every step in the path
             for index in range(1, len(path_to_go)):
-                print(index, path_to_go[index][1])
                 # go the direction
                 player.travel(path_to_go[index][1])
                 # add it to the full path
@@ -245,24 +228,17 @@ def traversal_calc():
             # set the current room as the previous one
             prev_room = curr_room
             # go in the next best direction
-            print("what do you think the current room is?", curr_room)
-            print("show me the graph", rooms_graph)
-            print("show me the current exits", curr_exits)
             moved = automove(curr_exits, rooms_graph[curr_room])
-            print(f'Trying to go: {moved}')
 
         # temp loop limiter
         i += 1
-        if i > 15:
-            print('full_path:', full_path)
+        if i > 15000:
             break
         # check if any path direction still has an unknown room
         if paths_check(rooms_graph) is False:
             # if all paths are checked, end while loop
             break
 
-    print(rooms_graph)
-    print(full_path)
     return full_path
 
 """
